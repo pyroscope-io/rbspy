@@ -164,11 +164,11 @@ impl StackTraceGetter {
         let tid = i32::from(gettid());
         for thread in self.process.threads()?.iter() {
             let ctid = thread.id()?;
-            let active = thread.active()?;
-            println!("thread ids {} {} {}", tid, ctid, active);
-
-            if active && ctid != tid {
-                return Ok(true);
+            if ctid != tid {
+                let active = thread.active()?;
+                if active {
+                    return Ok(true);
+                }
             }
         }
         Ok(false)
