@@ -3,6 +3,7 @@ use crate::core::address_finder::*;
 use crate::core::ruby_version;
 use crate::core::types::{MemoryCopyError, Pid, Process, ProcessMemory, ProcessRetry, StackTrace};
 use proc_maps::MapRange;
+use nix::unistd::gettid;
 
 use anyhow::{Context, Result};
 use libc::c_char;
@@ -158,9 +159,13 @@ impl StackTraceGetter {
 
     #[cfg(target_os = "linux")]
     fn on_cpu(&self) -> Result<bool> {
+        let tid = i32::from(gettid());
         for thread in self.process.threads()?.iter() {
+            let ctid = thread.id()?;
             let active = thread.active()?;
-            if active {
+            println!("thread ids {} {} {}", tid, ctid, active);
+
+            if active && ctid != tid {
                 return Ok(true);
             }
         }
